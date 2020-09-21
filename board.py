@@ -383,15 +383,15 @@ def brqMovs(b: Board, p: Player, sqix: Sqix, sv: Sqv) -> List[Move]:
         # (sv) must be a queen
         ds = Q_DIR
     
-    dpr("p={} sqix={} ({}) sv=%r", p, sqix, sqixAlge(sqix), sv)
+    #dpr("p={} sqix={} ({}) sv=%r", p, sqix, sqixAlge(sqix), sv)
     for d in ds:
         bound = 1
         
         while True:
             destSqix = sqix + bound*d
-            dpr("d={} bound={} sqix={} ({}) destSqix={} ({})",
-                d, bound, sqix, sqixAlge(sqix),
-                destSqix, sqixAlge(destSqix))
+            #dpr("d={} bound={} sqix={} ({}) destSqix={} ({})",
+            #    d, bound, sqix, sqixAlge(sqix),
+            #    destSqix, sqixAlge(destSqix))
             if b.sq[destSqix] == OFFBOARD: break
             if isPlayer(b.sq[destSqix], p): break
             if b.sq[destSqix] == EMPTY:
@@ -400,6 +400,7 @@ def brqMovs(b: Board, p: Player, sqix: Sqix, sv: Sqv) -> List[Move]:
                 r += [(sqix, destSqix)]
                 break
             bound += 1
+        #//while    
     #//for d        
     return r
     

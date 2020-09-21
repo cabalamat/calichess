@@ -174,10 +174,8 @@ class T_moveGeneration(lintest.TestCase):
         b2 = b.makeMove("e2e4")
         self.assertSame(b2.getSq("e2"), " ", "nothing on e2")
         self.assertSame(b2.getSq("e4"), "p", "WP on e4")
-        
-      
-#---------------------------------------------------------------------
 
+#---------------------------------------------------------------------
 
 group = lintest.TestGroup()
 group.add(T_conversionFunctions)
