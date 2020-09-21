@@ -3,7 +3,7 @@
 from ulib import lintest
 
 import board
-from board import frix, pmovs, algeSqix, movAlge, toSqix
+from board import frix, pmovs, algeSqix, toSqix, movAlmov
 
 #---------------------------------------------------------------------
 
@@ -127,7 +127,7 @@ class T_moveGeneration(lintest.TestCase):
         b = board.Board() # empty board
         b.sq[toSqix("a3")] = 'k' # WK on a3
         mvs = pmovs(b, 'W')
-        alMvs = sorted(movAlge(mv) for mv in mvs)
+        alMvs = sorted(movAlmov(mv) for mv in mvs)
         sb = ['a3a2', 'a3a4', 'a3b2', 'a3b3', 'a3b4']
         self.assertSame(alMvs, sb, "5 king moves")
         
@@ -139,7 +139,7 @@ class T_moveGeneration(lintest.TestCase):
         b.sq[toSqix("b4")] = 'R' # BR on b4
         
         mvs = pmovs(b, 'W')
-        alMvs = sorted(movAlge(mv) for mv in mvs)
+        alMvs = sorted(movAlmov(mv) for mv in mvs)
         sb = ['a3a4', 'a3b2', 'a3b3', 'a3b4']
         self.assertSame(alMvs, sb, "4 king moves")
         
@@ -150,7 +150,7 @@ class T_moveGeneration(lintest.TestCase):
         b.setSq("e4", "N")
         
         mvs = pmovs(b, 'W')
-        alMvs = [movAlge(mv) for mv in mvs]
+        alMvs = [movAlmov(mv) for mv in mvs]
         alMvsQ = sorted(almv for almv in alMvs if almv[:2]=='c2')
         sb = sorted([
             'c2b1', 
@@ -166,6 +166,14 @@ class T_moveGeneration(lintest.TestCase):
         alMvsP = sorted(almv for almv in alMvs if almv[:2]=='c4')
         self.assertSame(alMvsP, ['c4c5'], "1 P move")
         
+    def test_makeMove(self):
+        b = board.Board.startPosition()
+        self.assertSame(b.getSq("e2"), "p", "WP on e2")
+        self.assertSame(b.getSq("e1"), "k", "WK on e1")
+        
+        b2 = b.makeMove("e2e4")
+        self.assertSame(b2.getSq("e2"), " ", "nothing on e2")
+        self.assertSame(b2.getSq("e4"), "p", "WP on e4")
         
       
 #---------------------------------------------------------------------
