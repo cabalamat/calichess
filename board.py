@@ -13,12 +13,14 @@ from typing import List, Literal, Tuple, Union
 
 from ulib.butil import form, pr, prn, dpr, printargs
 
+from tpcheck import is_type
+
 #---------------------------------------------------------------------
 # types
 
 Rank = int # chess rank 1..8
 File = int # chess file a..h as 1..8
-RankFile = Tuple[Rank,File]
+FileRank = Tuple[File,Rank]
 ranks = [1,2,3,4,5,6,7,8]
 files = [1,2,3,4,5,6,7,8]
 
@@ -26,12 +28,12 @@ Sqix = int # address as index of Board.sq
 
 def frix(f: File, r: Rank) -> Sqix:
     """ convert file and rank to index of sq[] """
-    return 10 + f + 10*r
+    return 10 + 10*f + r
 
-def sqixFR(sqix: Sqix) -> Tuple[File, Rank]:
+def sqixFR(sqix: Sqix) -> FileRank:
     """ convert a square index to  file and rank """
-    rk = int(sqix/10) - 1
-    f = sqix % 10
+    f = int(sqix/10) - 1
+    rk = sqix % 10
     return (f,rk)
 
 def sqixAlge(sqix: Sqix) -> str:
@@ -46,7 +48,7 @@ def algeSqix(a: str) -> Sqix:
     rk = int(a[1])
     return frix(fi, rk)
     
-SqLocation = Union[RankFile, str, Sqix]
+SqLocation = Union[FileRank, str, Sqix]
 
 def toSqix(ad: SqLocation) -> Sqix:
     """ convert a location to a square index, from
@@ -54,17 +56,33 @@ def toSqix(ad: SqLocation) -> Sqix:
     - a RankFile, e.g. (2,4)=>34
     - algebraic, e.g. b4 => 34
     """
-    if isinstance(ad, Sqix):
+    if is_type(ad, Sqix):
         return ad
-    elif isinstance(ad, RankFile):
+    elif is_type(ad, FileRank):
         return frix(ad[0], ad[1])
     elif isinstance(ad, str):
         return algeSqix(ad)
     else:
-        ShouldntGetHere
+        raise ShouldntGetHere
 
-# a list of all the valid square addresses
-sqixs = [frix(f,r) 
+def toAlge(ad: SqLocation) -> str:
+    """ convert a location to algebraic notation, from
+    - a square index, e.g. 34 => 'b4'
+    - a RankFile, e.g. (2,4)=>'b4'
+    - algebraic, e.g. b4 => 'b4' (do nothing)
+    """
+    if is_type(ad, Sqix):
+        return sqixAlge(ad)
+    elif is_type(ad, FileRank):
+        f, rk = ad
+        return form("{}{}", "?abcdefghij"[f], rk)
+    elif isinstance(ad, str):
+        return ad # do nothing
+    else:
+        raise ShouldntGetHere
+
+# a list of all the on-board square addresses
+sqixs = [toSqix((f,r)) 
          for f in files 
          for r in ranks]
 
@@ -126,10 +144,14 @@ def isOpponent(sv: Sqv, p: Player) -> bool:
     return isPlayer(sv, oppo)
 
 # directions of movement
-NDIR = [-21, -19, -12, -8, 8, 12, 19, 21]
-BDIR = [-11, -9, 9, 11]
-RDIR = [-10, -1, 1, 10]
-QDIR = BDIR + RDIR
+WP_MOV = 1
+WP_CAPTURE = [-9, 11]
+BP_MOV = -1
+BP_CAPTURE = [-11, 9]
+N_DIR = [-21, -19, -12, -8, 8, 12, 19, 21]
+B_DIR = [-11, -9, 9, 11]
+R_DIR = [-10, -1, 1, 10]
+Q_DIR = B_DIR + R_DIR
 
 #---------------------------------------------------------------------
 
@@ -149,12 +171,18 @@ class Board:
         b.setRank(2, "pppppppp") # rank 2 = white pawns
         b.setRank(1, "rnbqkbnr") # rank 1 = white pieces 
         return b
+    
+    def getSq(self, ad:SqLocation) -> Sqv:
+        return self.sq[toSqix(ad)]
+        
+    def setSq(self, ad:SqLocation , sv: Sqv):  
+        self.sq[toSqix(ad)] = sv
                
     def setRank(self, r: Rank, pieces: str):
         """ set all the pieces on a rank """
         for f in files:
             pc = pieces[f-1]
-            self.sq[frix(f, r)] = pc
+            self.sq[toSqix((f,r))] = pc
             
     def __str__(self) -> str:
         """ a string representation of a board, for printing """
@@ -163,7 +191,7 @@ class Board:
         for r in ranks[::-1]:
             s += form("{} | ", r)
             for f in files:
-                sv: Sqv = self.sq[frix(f, r)]
+                sv: Sqv = self.sq[toSqix((f,r))]
                 if sv==" " and (f+r)%2==0: 
                     s += "# "
                 else:
@@ -214,21 +242,20 @@ def whitePawnMovs(b: Board, sqix: Sqix) -> List[Move]:
     r: List[Move] = []
     
     # 1 move ahead:
-    if b.sq[sqix+10]==EMPTY:
-        r += [(sqix, sqix+10)]
+    if b.sq[sqix+WP_MOV]==EMPTY:
+        r += [(sqix, sqix+WP_MOV)]
         
-    # capture-left:
-    if b.sq[sqix+9] in blackSet:
-        r += [(sqix, sqix+9)]
-        
-    # capture-right:
-    if b.sq[sqix+11] in blackSet:
-        r += [(sqix, sqix+11)]
+    # captures:
+    for d in WP_CAPTURE:
+        if b.sq[sqix+d] in blackSet:
+            r += [(sqix, sqix+d)]
     
     # double first move
     rk = sqixFR(sqix)[1]
-    if rk==2 and b.sq[sqix+10]==EMPTY and b.sq[sqix+20]==EMPTY:        
-        r += [(sqix, sqix+20)]
+    if (rk==2 
+        and b.sq[sqix+WP_MOV]==EMPTY 
+        and b.sq[sqix+WP_MOV*2]==EMPTY):        
+        r += [(sqix, sqix+WP_MOV*2)]
     
     return r
     
@@ -237,29 +264,27 @@ def blackPawnMovs(b: Board, sqix: Sqix) -> List[Move]:
     r: List[Move] = []
     
     # 1 move ahead:
-    if b.sq[sqix-10]==EMPTY:
-        r += [(sqix, sqix-10)]
+    if b.sq[sqix+BP_MOV]==EMPTY:
+        r += [(sqix, sqix+BP_MOV)]
         
-    # capture-left:
-    if b.sq[sqix-11] in whiteSet:
-        r += [(sqix, sqix-11)]
-        
-    # capture-right:
-    if b.sq[sqix-9] in whiteSet:
-        r += [(sqix, sqix-9)]
+    # captures:
+    for d in BP_CAPTURE:
+        if b.sq[sqix+d] in whiteSet:
+            r += [(sqix, sqix+d)]
     
     # double first move
     rk = sqixFR(sqix)[1]
-    if rk==7 and b.sq[sqix-10]==EMPTY and b.sq[sqix-20]==EMPTY:        
-        r += [(sqix, sqix-20)]
-    
+    if (rk==7
+        and b.sq[sqix+BP_MOV]==EMPTY 
+        and b.sq[sqix+BP_MOV*2]==EMPTY):        
+        r += [(sqix, sqix+BP_MOV*2)]
+        
     return r
     
 def knightMovs(b: Board, p: Player, sqix: Sqix) -> List[Move]:
     """ moves for (p)'s knight on (sqix) """
-    NDIR = [-21, -19, -12, -8, 8, 12, 19, 21]
     r: List[Move] = []
-    for d in NDIR:
+    for d in N_DIR:
         if b.sq[sqix+d]==EMPTY or isOpponent(b.sq[sqix+d], p):
             r += [(sqix, sqix+d)]
     #//for d    
@@ -270,12 +295,12 @@ def brqMovs(b: Board, p: Player, sqix: Sqix, sv: Sqv) -> List[Move]:
     r: List[Move] = []
     
     if sv in bishopSet:
-        ds = BDIR
+        ds = B_DIR
     elif sv in rookSet: 
-        ds = RDIR
+        ds = R_DIR
     else:   
         # (sv) must be a queen
-        ds = QDIR
+        ds = Q_DIR
     
     dpr("p={} sqix={} ({}) sv=%r", p, sqix, sqixAlge(sqix), sv)
     for d in ds:
@@ -301,7 +326,7 @@ def brqMovs(b: Board, p: Player, sqix: Sqix, sv: Sqv) -> List[Move]:
 def kingMovs(b: Board, p: Player, sqix: Sqix) -> List[Move]:
     """ moves for (p)'s king on (sqix) """
     r: List[Move] = []
-    for d in QDIR:
+    for d in Q_DIR:
         destSqix = sqix+d
         if b.sq[destSqix] == EMPTY or isOpponent(b.sq[destSqix], p):
             r += [(sqix, destSqix)]
@@ -313,10 +338,13 @@ def kingMovs(b: Board, p: Player, sqix: Sqix) -> List[Move]:
 #---------------------------------------------------------------------
 
 def main():
-    b = Board()
+    b = Board.startPosition()
     prn("board:\n{}", b)
-    mvs = pmovs(b, 'W') # white's moves from starting position
-    prn("white moves = {}", [movAlge(mv) for mv in mvs]) 
+    wmvs = pmovs(b, 'W') # white's moves from starting position
+    prn("white moves = {}", [movAlge(mv) for mv in wmvs]) 
+    
+    bmvs = pmovs(b, 'B') # blacks's moves from starting position
+    prn("black moves = {}", [movAlge(mv) for mv in bmvs]) 
 
 if __name__=='__main__':
     main()
