@@ -403,8 +403,7 @@ def brqMovs(b: Board, p: Player, sqix: Sqix, sv: Sqv) -> List[Move]:
         #//while    
     #//for d        
     return r
-    
-@printargs    
+     
 def kingMovs(b: Board, p: Player, sqix: Sqix) -> List[Move]:
     """ moves for (p)'s king on (sqix) """
     r: List[Move] = []
