@@ -16,6 +16,7 @@ Pawn promotion is always to Q
 from typing import List, Literal, Tuple, Union, cast
 
 from ulib.butil import form, pr, prn, dpr, printargs
+from ulib.termcolours import TermColours
 
 from tpcheck import is_type
 
@@ -238,10 +239,24 @@ class Board:
             
     def __str__(self) -> str:
         """ a string representation of a board, for printing """
+        s = self.headerStr() + self.midAsciiStr() + self.footerStr()
+        return s
+    
+    def termStr(self) -> str:
+        """ output the board to a xterm output device """
+        s = self.headerStr() + self.midTermStr() + self.footerStr()
+        return s
+    
+    def headerStr(self) -> str:
+        """ string for header of board output """
         s = form("{} to move; Previous: {}\n", 
                  self.mover, self.prevMovesStr())
         s += "    a b c d e f g h\n"
-        s += "  +-----------------+\n"
+        return s
+    
+    def midAsciiStr(self) -> str:
+        """ middle of board output as ascii string """
+        s = "  +-----------------+\n"
         for r in ranks[::-1]:
             s += form("{} | ", r)
             for f in files:
@@ -253,8 +268,41 @@ class Board:
             #//for f
             s += "|\n"
         #//for r 
-        s +="  +-----------------+\n"
-        s += "    a b c d e f g h"
+        s += "  +-----------------+\n"
+        return s
+    
+    def midTermStr(self) -> str:
+        """ middle of board output as xterm string """
+        W_BEFORE = (TermColours.BOLD + chr(27) + "[38;2;128;0;0m"
+            + chr(27) + "[48;2;255;220;220m")
+        W_AFTER = TermColours.NORMAL
+        B_BEFORE = (TermColours.BOLD + chr(27) + "[38;2;0;0;128m" 
+            + chr(27) + "[48;2;220;220;255m")
+        B_AFTER = TermColours.NORMAL
+        s = "  \u2554" + "\u2550"*17 + "\u2557\n"
+        for r in ranks[::-1]:
+            s += form("{} \u2551 ", r)
+            for f in files:
+                sv: Sqv = self.sq[toSqix((f,r))]
+                bg = "\u2591" if (f+r)%2==0 else " "
+                if sv==" " and (f+r)%2==0: 
+                    s += bg + " "
+                else:
+                    b = ""; a = ""
+                    if sv in whiteSet:
+                        b = W_BEFORE; a = W_AFTER    
+                    elif sv in blackSet:
+                        b = B_BEFORE; a = B_AFTER
+                    s += b + sv + a + " "
+            #//for f
+            s += "\u2551\n"
+        #//for r 
+        s += "  \u255A" + "\u2550"*17 + "\u255D\n"
+        return s
+    
+    def footerStr(self) -> str:
+        """ string for header of board output """
+        s = "    a b c d e f g h"
         return s
     
     def prevMovesStr(self) -> str:
@@ -429,13 +477,13 @@ def main():
 
 def shortGame():
     b = Board.startPosition()
-    prn("board b:\n{}", b)
+    prn("board b:\n{}", b.termStr())
     
     b2 = b.makeMove("e2e4")
-    prn("board b2:\n{}", b2)
+    prn("board b2:\n{}", b2.termStr())
     
     b3 = b2.makeMove("c7c5")
-    prn("board b3:\n{}", b3)
+    prn("board b3:\n{}", b3.termStr())
 
 if __name__=='__main__':
     #main()

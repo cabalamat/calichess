@@ -35,7 +35,7 @@ def getBestMove(b: Board) -> Move:
 def main():
     b = Board.startPosition()
     while 1:
-        prn("Position: {}\n", b)
+        prn("Position: {}\n", b.termStr())
         possibleMoves = pmovs(b, "W")
         possMovesStr = [toAlmov(mv) for mv in possibleMoves]
         while 1:
