@@ -13,7 +13,7 @@ Doesn't deal with castling, en passant or check.
 Pawn promotion is always to Q
 """
 
-from typing import List, Literal, Tuple, Union, cast
+from typing import List, Literal, Tuple, Union, cast, Optional
 
 from ulib.butil import form, pr, prn, dpr, printargs
 from ulib.termcolours import TermColours
@@ -169,22 +169,6 @@ brqSet = frozenset([WB, WR, WQ, BB, BR, BQ])
 queenSet = frozenset([WQ, BQ])
 kingSet = frozenset([WK, BK])
 
-# a player is either White or Black
-Player = Literal['W', 'B']
-
-def opponent(p: Player) -> Player:
-    """ (p)'s opponent """
-    return "W" if p=="B" else "B"
-    
-def isPlayer(sv: Sqv, p: Player) -> bool:
-    """ does (sv) belong to player (p)? """
-    return ((p=='W' and sv in whiteSet)
-            or (p=='B' and sv in blackSet))
-
-def isOpponent(sv: Sqv, p: Player) -> bool:
-    """ does (sv) belong to the opponent of player (p)? """
-    return isPlayer(sv, opponent(p))
-
 # directions of movement
 WP_MOV = 1
 WP_CAPTURE = [-9, 11]
@@ -196,11 +180,51 @@ R_DIR = [-10, -1, 1, 10]
 Q_DIR = B_DIR + R_DIR
 
 #---------------------------------------------------------------------
+# players 
+
+# a player is either White or Black
+Player = Literal['W', 'B']
+
+def opponent(p: Player) -> Player:
+    """ (p)'s opponent """
+    return "W" if p=="B" else "B"
+
+OPP_PIECE = {}
+for wp, bp in [[WP, BP], [WN, BN], [WB, BB], 
+               [WR, BR], [WQ, BQ], [WK, BK]]:
+    OPP_PIECE[wp] = bp
+    OPP_PIECE[bp] = wp
+
+def opponentPiece(pv: Sqv) -> Sqv:
+    """ if (pv) is a piece, return the opponent's equivalent piece
+    else return EMPTY.
+    """
+    return OPP_PIECE.get(pv, EMPTY)
+    
+def isPlayer(sv: Sqv, p: Player) -> bool:
+    """ does (sv) belong to player (p)? """
+    return ((p=='W' and sv in whiteSet)
+            or (p=='B' and sv in blackSet))
+
+def isOpponent(sv: Sqv, p: Player) -> bool:
+    """ does (sv) belong to the opponent of player (p)? """
+    return isPlayer(sv, opponent(p))
+
+#---------------------------------------------------------------------
+# functions for mirrors
+
+def mirrorSq(sx: Sqix) -> Sqix:
+    """ return the mirror of a square address """
+    f, rk = sqixFR(sx)
+    return toSqix((f, 9-rk))
+
+#---------------------------------------------------------------------
 
 class Board:
     sq: List[Sqv] = []
     mover: Player = 'W'
     movesMade: List[Move] = []
+    mirror: Optional['Board'] = None
     
     def __init__(self):
         """ create an empty board """
@@ -236,6 +260,26 @@ class Board:
         for f in files:
             pc = pieces[f-1]
             self.sq[toSqix((f,r))] = pc
+            
+    def getMirror(self):
+        """ a mirror is the same position as the Board, but mirrored
+        along the boundary of the 4th and 5th ranks, and with colours
+        reversed.
+        
+        Using mirrors means you don't have to write separate code 
+        for white and black in some instances. 
+        """
+        if not self.mirror:
+            self.mirror = self.calcMirror()
+        return self.mirror
+    
+    def calcMirror(self) -> 'Board':
+        """ Return a Board that is the mirror of (self) """
+        mir = Board()
+        for sx in sqixs:
+            mir.sq[mirrorSq(sx)] = opponentPiece(self.sq[sx])
+        mir.mover = opponent(self.mover)    
+        
             
     def __str__(self) -> str:
         """ a string representation of a board, for printing """
