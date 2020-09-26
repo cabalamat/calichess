@@ -261,7 +261,7 @@ class Board:
             pc = pieces[f-1]
             self.sq[toSqix((f,r))] = pc
             
-    def getMirror(self):
+    def getMirror(self) -> 'Board':
         """ a mirror is the same position as the Board, but mirrored
         along the boundary of the 4th and 5th ranks, and with colours
         reversed.
@@ -278,7 +278,8 @@ class Board:
         mir = Board()
         for sx in sqixs:
             mir.sq[mirrorSq(sx)] = opponentPiece(self.sq[sx])
-        mir.mover = opponent(self.mover)    
+        mir.mover = opponent(self.mover)  
+        return mir
         
             
     def __str__(self) -> str:

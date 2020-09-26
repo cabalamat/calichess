@@ -65,29 +65,37 @@ class T_pawnStructure(lintest.TestCase):
     
     def test_doubledIsolated_empty(self):
         b = Board()
-        v = evalpos.doubledIsolated(b)
+        v = evalpos.pawnStructureW(b)
         self.assertSame(v, 0, "no doubled/isolated pawns on empty board")
    
     def test_doubledIsolated_start(self):
         b = Board.startPosition()
-        v = evalpos.doubledIsolated(b)
+        v = evalpos.pawnStructureW(b)
         self.assertSame(v, 0, "no doubled/isolated pawns on start position")
         
         
     def test_isolated(self):
         b = Board()
         b.setSq("b2", WP)
-        v = evalpos.doubledIsolated(b)
-        self.assertSame(v, evalpos.ISOLATED, "isolated pawn on b2")
+        v = evalpos.pawnStructureW(b)
+        self.assertSame(v, evalpos.ISOLATED+evalpos.PASSED, 
+            "passed isolated pawn on b2")
         
-    def test_doubledIsolated(self):
+        
+    def test_doubledIsolatedWhite(self):
         b = Board()
         b.setSq("f7", BP)
         b.setSq("f6", BP)
         b.setSq("f4", BP)
-        v = evalpos.doubledIsolated(b)
-        self.assertSame(v, -(evalpos.ISOLATED*3 + evalpos.DOUBLED*2), 
-            "tripled isolated pawns on f-file")
+        v = evalpos.pawnStructureW(b)
+        self.assertSame(v, 0, 
+            "no white pawns")
+        
+        v = evalpos.pawnStructureW(b.getMirror())
+        self.assertSame(v, 
+            evalpos.ISOLATED*3 + evalpos.DOUBLED*2 
+            + evalpos.PASSED + evalpos.PASSED_ADVANCE[9-4], 
+            "black->white tripled isolated pawns on f-file, but passed")
         
         
 #---------------------------------------------------------------------
