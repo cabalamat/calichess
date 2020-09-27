@@ -195,42 +195,35 @@ def mobilityW(b: Board) -> int:
 def calcSqImportance(b: Board) -> List[int]:
     """ return how important each square is """
     si: List[int] = [0]*len(b.sq)
+    
+    bkLocation = getBkSq(b)
     for sx in sqixs:
         si[sx] = BASE
-    for sx in [54,55,64,65]: 
-        si[sx] += CENTER
-    for sx in [43,44,45,46, 53,56, 63,66, 73,74,75,76]: 
-        si[sx] += OUTER_CENTER
-        
-    bkLocation = getBKSq(b)
-    if bkLocation:
-        si[bkLocation] += EK
-        for sx in oneAway(bkLocation):
-            si[sx] += EK1
-        for sx in twoAway(bkLocation):
-            si[sx] += EK2
+        if sx in [54,55,
+                  64,65]: 
+            si[sx] += CENTER
+        elif sx in [43,44,45,46, 
+                    53,      56, 
+                    63,      66, 
+                    73,74,75,76]: 
+            si[sx] += OUTER_CENTER
+            
+        distBK = dist(sx, bkLocation)    
+        if distBK == 0: 
+            si[sx] += EK
+        elif distBK == 1:
+            si[sx] += EK1 
+        elif distBK == 2:
+            si[sx] += EK2  
+    #//for sx
     return si
-    
     
 def getBkSq(b: Board) -> Optional[Sqix]:
     """ return the square with the black king on it, or None """
     for sx in sqixs:
         if b.sq[sx] == BK:
             return sx
-    return None    
-
-def oneAway(sx: Sqix) -> List[Sqix]:
-    """ return a list of the squares one away from square (sx) """
-    sxs = [sx-11,sx-10,sx-9,sx-1,sx+1,sx+9,sx+10,sx+11]
-    sxs2 = [sx 
-            for sx in sxs 
-            if sx in sqixs]
-    return sxs2
-
-def twoAway(sx: Sqix) -> List[Sqix]:
-    """ return a list of the squares two away from square (sx) """
-    sxs = [sqix for sqix in sqixs if dist(sx,sqix)==2]
-    return sxs
+    return None
 
 def dist(sx1: Sqix, sx2: Sqix) -> int:
     """ return the distance between (sx1) and (sx2), in terms of 

@@ -61,7 +61,7 @@ class T_material(lintest.TestCase):
 #---------------------------------------------------------------------
 
 class T_pawnStructure(lintest.TestCase):
-    """ test materal evaluation """
+    """ test pawn structure """
     
     def test_doubledIsolated_empty(self):
         b = Board()
@@ -97,12 +97,25 @@ class T_pawnStructure(lintest.TestCase):
             + evalpos.PASSED + evalpos.PASSED_ADVANCE[9-4], 
             "black->white tripled isolated pawns on f-file, but passed")
         
+ 
+    
+#---------------------------------------------------------------------
+
+class T_mobility(lintest.TestCase):
+    """ test mobility (and king attack/defence) """
+    
+    def test_calcSqImportance(self):
+        b = Board.startPosition()
+        sqImp = evalpos.calcSqImportance(b)
+        self.assertSame(len(sqImp), len(b.sq), 
+            "square-importance array (sqImp) is the right length")
         
 #---------------------------------------------------------------------
 
 group = lintest.TestGroup()
 group.add(T_material)
 group.add(T_pawnStructure)
+group.add(T_mobility)
 
 if __name__=='__main__': group.run()
 
