@@ -32,6 +32,7 @@ Rank = int # chess rank 1..8
 File = int # chess file a..h as 1..8
 FileRank = Tuple[File,Rank]
 ranks = [1,2,3,4,5,6,7,8]
+reverseRanks = ranks[::-1]
 files = [1,2,3,4,5,6,7,8]
 
 Sqix = int # address as index of Board.sq

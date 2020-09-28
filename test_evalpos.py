@@ -109,6 +109,16 @@ class T_mobility(lintest.TestCase):
         sqImp = evalpos.calcSqImportance(b)
         self.assertSame(len(sqImp), len(b.sq), 
             "square-importance array (sqImp) is the right length")
+        prn("square importance:")
+        prn("    a b c d e f g h")
+        for rk in ranks[::-1]:
+            pr("{} : ", rk)
+            for f in files:
+                pr("{} ", sqImp[toSqix((f,rk))])
+            #//for f
+            pr("\n")
+        #//for rk    
+            
         
 #---------------------------------------------------------------------
 
