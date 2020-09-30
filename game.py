@@ -3,6 +3,7 @@
 from ulib.butil import form, pr, prn, dpr, printargs
 
 from board import *
+from movegen import pmovs
 import evalpos
 
 #---------------------------------------------------------------------

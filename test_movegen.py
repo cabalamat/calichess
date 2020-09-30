@@ -21,7 +21,7 @@ class T_moveGeneration(lintest.TestCase):
         
     def test_king(self): 
         b = board.Board() # empty board
-        b.sq[toSqix("a3")] = 'k' # WK on a3
+        b.sq[toSqix("a3")] = 'K' # WK on a3
         mvs = pmovs(b, 'W')
         alMvs = sorted(movAlmov(mv) for mv in mvs)
         sb = ['a3a2', 'a3a4', 'a3b2', 'a3b3', 'a3b4']
@@ -30,9 +30,9 @@ class T_moveGeneration(lintest.TestCase):
     def test_king_ppop(self):
         """ test king moves with player's and opponent's pieces """
         b = board.Board() # empty board
-        b.sq[toSqix("a3")] = 'k' # WK on a3
-        b.sq[toSqix("a2")] = 'p' # WP on a2
-        b.sq[toSqix("b4")] = 'R' # BR on b4
+        b.sq[toSqix("a3")] = 'K' # WK on a3
+        b.sq[toSqix("a2")] = 'P' # WP on a2
+        b.sq[toSqix("b4")] = 'r' # BR on b4
         
         mvs = pmovs(b, 'W')
         alMvs = sorted(movAlmov(mv) for mv in mvs)
@@ -41,9 +41,9 @@ class T_moveGeneration(lintest.TestCase):
         
     def test_queen(self):
         b = board.Board()
-        b.setSq("c2", "q")
-        b.setSq("c4", "p")
-        b.setSq("e4", "N")
+        b.setSq("c2", "Q")
+        b.setSq("c4", "P")
+        b.setSq("e4", "n")
         
         mvs = pmovs(b, 'W')
         alMvs = [movAlmov(mv) for mv in mvs]
@@ -64,12 +64,12 @@ class T_moveGeneration(lintest.TestCase):
         
     def test_makeMove(self):
         b = board.Board.startPosition()
-        self.assertSame(b.getSq("e2"), "p", "WP on e2")
-        self.assertSame(b.getSq("e1"), "k", "WK on e1")
+        self.assertSame(b.getSq("e2"), "P", "WP on e2")
+        self.assertSame(b.getSq("e1"), "K", "WK on e1")
         
         b2 = b.makeMove("e2e4")
         self.assertSame(b2.getSq("e2"), " ", "nothing on e2")
-        self.assertSame(b2.getSq("e4"), "p", "WP on e4")
+        self.assertSame(b2.getSq("e4"), "P", "WP on e4")
 
 #---------------------------------------------------------------------
 

@@ -12,7 +12,7 @@ Evaluates boards in accordance with:
 
 """
 
-from typing import Optional
+from typing import Optional, Dict, List
 
 import board
 from board import *
@@ -21,9 +21,10 @@ from board import *
 
 def staticEval(b: Board) -> int:
     """ statically evlauate a position """
-    r = material(b) + pawnStructure(b)
+    v = material(b) + pawnStructure(b) + mobility(b)
+    #v += swapOff(b)
     
-    return r
+    return v
 
 #---------------------------------------------------------------------
 # material
@@ -179,17 +180,22 @@ FINAL_MULTIPLIER = 1
 
 
 def mobility(b: Board) -> int:
-    v = mobilityW(b)
+    b.createMoves()
+    wMob = mobilityW(b, b.wMovs)
+    dpr("wMob={}", wMob)
+    bMob = mobilityW(b.getMirror(), mirrorMoves(b.bMovs))
+    dpr("bMob={}", bMob)
+    v = wMob - bMob
     return v
 
-def mobilityW(b: Board) -> int:
-    attacks = b.getWAttacks()
+def mobilityW(b: Board, movs: List[Move]) -> int:
+    #attacks = b.getWAttacks()
     sqWeights = calcSqImportance(b)
     v = 0
-    for sourceSq, destSq in attacks:
+    for sourceSq, destSq in movs:
         v += sqWeights[destSq]
     #//for  
-    v = v * FINAL_MULTIPLIE
+    v = int(v * FINAL_MULTIPLIER)
     return v
     
 def calcSqImportance(b: Board) -> List[int]:
@@ -235,8 +241,50 @@ def dist(sx1: Sqix, sx2: Sqix) -> int:
     drk = abs(rk1-rk2)
     return max(df, drk)
 
+#---------------------------------------------------------------------
+   
+def swapOff(b: Board) -> int:   
+    """ can the mover profitably capture on a square """
     
+    movAtt = b.moverAttacks()
+    oppDef = b.opponentDefends()
     
+    #lump mover attacks and opponent defends by destination sq
+    movAttLump: lump(movAtt)
+    oppDefLump = lump(oppDef)
+    
+    for dest in sqixs:
+        if movAttLump[dest]:
+            sosq = swapOffSq(b, movAttLump, oppDefLump, dest)
+    #//for        
+    
+def lumpByDest(mvs: List[Move]) -> Dict[Sqix,List[Move]]: 
+    """ lump a list of moves together by destination square """
+    d: Dict[Sqix,List[Move]] = {sx:[] for sx in sqixs}
+    for mv in mvs:
+        _, dest = mv
+        d[dest].append(mv)
+    return d   
+
+def swapOffSq(b: Board, 
+              movAttLump:Dict[Sqix,List[Move]],
+              oppDefLump:Dict[Sqix,List[Move]],
+              dest: Sqix) -> int:
+    """ calculate how much the attacker would gain, if anything, 
+    by capturing on square (dest).
+    """
+    attPieces = [b.sq[src]
+                 for src,_ in movAttLump[dest]]
+    dpr("attPieces=%r", attPieces)
+    attPieceValues = sorted(abs(pieceValues[p]) 
+                            for p in attPieces)
+    dpr("attPieceValues=%r", attPieceValues)
+    #oppDef = b.sq[dest]
+    #oppDefOthers = sorted(abs(pieceValues[b.sq[src]])
+    #                      for src,_ in oppDefLump[dest]) 
+    
+
+            
 
 
 #---------------------------------------------------------------------

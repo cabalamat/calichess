@@ -138,26 +138,26 @@ def toMov(m: MovAlmov) -> Move:
 #---------------------------------------------------------------------
 # values that can go in sq[]:
 
-WP='p'
-WN='n'
-WB='b'
-WR='r'
-WQ='q'
-WK='k'
+WP='P'
+WN='N'
+WB='B'
+WR='R'
+WQ='Q'
+WK='K'
 
-BP='P'
-BN='N'
-BB='B'
-BR='R'
-BQ='Q'
-BK='K'
+BP='p'
+BN='n'
+BB='b'
+BR='r'
+BQ='q'
+BK='k'
 
 EMPTY=' '
 OFFBOARD='-'
 
 # a square-value is what can go in a Board.sq[] element
-Sqv = Literal['p', 'n', 'b', 'r', 'q', 'k',
-              'P', 'N', 'B', 'R', 'Q', 'K',
+Sqv = Literal['P', 'N', 'B', 'R', 'Q', 'K',
+              'p', 'n', 'b', 'r', 'q', 'k',
               ' ', '-']
 
 whiteSet = frozenset([WP,WN,WB,WR,WQ,WK])
@@ -219,13 +219,29 @@ def mirrorSq(sx: Sqix) -> Sqix:
     f, rk = sqixFR(sx)
     return toSqix((f, 9-rk))
 
+def mirrorMove(mv: Move) -> Move:
+    """ return the mirror of a move """
+    src, dest = mv
+    return (mirrorSq(src), mirrorSq(dest))
+
+def mirrorMoves(mvs: List[Move]) -> List[Move]:
+    """ return the mirror of a list of moves """
+    return [mirrorMove(mv) for mv in mvs]
+
 #---------------------------------------------------------------------
 
 class Board:
+    #----- game position:
     sq: List[Sqv] = []
     mover: Player = 'W'
+    
+    #----- history:
     movesMade: List[Move] = []
+    
+    #----- useful stuff for move generation, evaluation, etc
     mirror: Optional['Board'] = None
+    wMovs: Optional[List[Move]] = None
+    bMovs: Optional[List[Move]] = None
     
     def __init__(self):
         """ create an empty board """
@@ -244,10 +260,10 @@ class Board:
     def startPosition() -> 'Board':
         """ return the start position """
         b = Board()
-        b.setRank(8, "RNBQKBNR") # rank 8 = black pieces
-        b.setRank(7, "PPPPPPPP") # rank 7 = black pawns
-        b.setRank(2, "pppppppp") # rank 2 = white pawns
-        b.setRank(1, "rnbqkbnr") # rank 1 = white pieces 
+        b.setRank(8, "rnbqkbnr") # rank 8 = black pieces 
+        b.setRank(7, "pppppppp") # rank 7 = black pawns
+        b.setRank(2, "PPPPPPPP") # rank 2 = white pawns
+        b.setRank(1, "RNBQKBNR") # rank 1 = white pieces
         return b
     
     def getSq(self, ad:SqLocation) -> Sqv:
@@ -281,6 +297,15 @@ class Board:
             mir.sq[mirrorSq(sx)] = opponentPiece(self.sq[sx])
         mir.mover = opponent(self.mover)  
         return mir
+    
+    def createMoves(self):
+        """ create wMovs, bMovs etc if they are not already
+        created. 
+        """
+        import movegen
+        if self.wMovs is not None: return # don't create again
+        self.wMovs = movegen.pmovs(self, 'W')
+        self.bMovs = movegen.pmovs(self, 'B')
         
             
     def __str__(self) -> str:

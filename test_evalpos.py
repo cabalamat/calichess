@@ -118,7 +118,31 @@ class T_mobility(lintest.TestCase):
             #//for f
             pr("\n")
         #//for rk    
-            
+        
+    def test_mobility(self):
+        b = Board.startPosition()
+        v = evalpos.mobility(b)
+        self.assertSame(v, 0, "sum mobility W-B is zero")
+  
+    
+#---------------------------------------------------------------------
+
+class T_swapOff(lintest.TestCase):
+    """ test swap-off """
+    
+    def test_lumpByDest(self):
+        """lumpByDest() function """
+        mvs = [(32,33), (32,34), (45,46), (44,34)]
+        r = evalpos.lumpByDest(mvs)
+        self.assertSame(r[21], [], "no moves go to a1")
+        self.assertSame(r[33], [(32,33)], "one move goes to b3")
+        self.assertSame(r[34], [(32,34), (44,34)], "2 moves go to b4")
+        self.assertSame(r[46], [(45,46)], "one move goes to c5")
+        
+    def test_swapOffSq(self):
+        """ swapOffSq() function """
+        
+        
         
 #---------------------------------------------------------------------
 
@@ -126,6 +150,7 @@ group = lintest.TestGroup()
 group.add(T_material)
 group.add(T_pawnStructure)
 group.add(T_mobility)
+group.add(T_swapOff)
 
 if __name__=='__main__': group.run()
 
