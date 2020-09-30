@@ -109,6 +109,14 @@ class T_Board(lintest.TestCase):
         self.assertSame(sv, board.EMPTY, "b3 empty")
         sv = b.sq[toSqix("h7")]
         self.assertSame(sv, board.BP, "h7 BP")
+        
+    def test_fen(self):
+        b = board.Board.startPosition()
+        r = b.toFen()
+        self.assertSame(r, 
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1",
+            "FEN for start position")
+        
 
 #---------------------------------------------------------------------
 

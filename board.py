@@ -266,6 +266,37 @@ class Board:
         b.setRank(1, "RNBQKBNR") # rank 1 = white pieces
         return b
     
+    def toFen(self) -> str:
+        """ output position in FEN notation """
+        s = ""
+        for rk in ranks[::-1]:
+            s += self._toFenRank(rk) + "/"
+        #//for rk
+        s = s[:-1] + " " + self.mover.lower()
+        s += " - " # TODO: castling
+        s += "- " # TODO: en passant
+        s += "0 " # TODO: moves since last p move / capture
+        s += form("{}", int(len(self.movesMade)/2)+1)
+        return s
+    
+    def _toFenRank(self, rk) -> str:
+        """ return FEN-string for rank (rk) """
+        s = ""
+        numSpaces = 0
+        for f in files:
+            sv = self.sq[toSqix((f,rk))]
+            if sv==" ": 
+                numSpaces += 1
+            else:
+                if numSpaces >= 1:
+                    s += form("{}", numSpaces)
+                    numSpaces = 0
+                s += sv
+        #//for f       
+        if numSpaces >= 1:
+            s += form("{}", numSpaces)
+        return s   
+    
     def getSq(self, ad:SqLocation) -> Sqv:
         return self.sq[toSqix(ad)]
         
