@@ -234,6 +234,10 @@ class Board:
     #----- game position:
     sq: List[Sqv] = []
     mover: Player = 'W'
+    castleWK: bool = True 
+    castleWQ: bool = True 
+    castleBK: bool = True 
+    castleBQ: bool = True 
     
     #----- history:
     movesMade: List[Move] = []
@@ -273,7 +277,7 @@ class Board:
             s += self._toFenRank(rk) + "/"
         #//for rk
         s = s[:-1] + " " + self.mover.lower()
-        s += " - " # TODO: castling
+        s += form(" {} ", self._toFenCastling()) # TODO: castling
         s += "- " # TODO: en passant
         s += "0 " # TODO: moves since last p move / capture
         s += form("{}", int(len(self.movesMade)/2)+1)
@@ -296,6 +300,15 @@ class Board:
         if numSpaces >= 1:
             s += form("{}", numSpaces)
         return s   
+    
+    def _toFenCastling(self) -> str:
+        s = ""
+        if self.castleWK: s+= "K"
+        if self.castleWQ: s+= "Q"
+        if self.castleBK: s+= "k"
+        if self.castleBQ: s+= "q"
+        if not s: s = ""
+        return s
     
     def getSq(self, ad:SqLocation) -> Sqv:
         return self.sq[toSqix(ad)]
@@ -423,6 +436,7 @@ class Board:
         sqFrom, sqTo = mv
         b2.sq[sqTo] = b2.sq[sqFrom]
         b2.sq[sqFrom] = EMPTY
+        b2._checkCanCastle()
         
         #>>>>> check for promoting pawns
         _, rankTo = sqixFR(sqTo)
@@ -436,6 +450,21 @@ class Board:
                 b2.sq[sqTo] = BQ       
         
         return b2
+    
+    def _checkCanCastle(self):
+        """ if W or B can no longer castle, change the relevant
+        castling flag. 
+        """
+        if self.getSq("h1")!="R": self.castleWK = False
+        if self.getSq("a1")!="R": self.castleWQ = False
+        if self.getSq("e1")!="K": 
+            self.castleWK = False
+            self.castleWQ = False
+        if self.getSq("h8")!="r": self.castleBK = False
+        if self.getSq("a8")!="r": self.castleBQ = False
+        if self.getSq("e8")!="k": 
+            self.castleBK = False
+            self.castleBQ = False
 
  
 #---------------------------------------------------------------------

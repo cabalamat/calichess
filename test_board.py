@@ -114,7 +114,7 @@ class T_Board(lintest.TestCase):
         b = board.Board.startPosition()
         r = b.toFen()
         self.assertSame(r, 
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1",
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
             "FEN for start position")
         
 
