@@ -238,6 +238,8 @@ class Board:
     castleWQ: bool = True 
     castleBK: bool = True 
     castleBQ: bool = True 
+    mspmc: int = 0 # moves since pawn move or capture
+    ply: int = 0 # moves made by either player
     
     #----- history:
     movesMade: List[Move] = []
@@ -270,6 +272,32 @@ class Board:
         b.setRank(1, "RNBQKBNR") # rank 1 = white pieces
         return b
     
+    @staticmethod    
+    def fromFEN(fen: str) -> 'Board':
+        """ create Board from FEN """
+        b = Board()
+        fen2 = fen.split()
+        if len(fen2)!=6:
+            raise ValueError(form("Bad FEN of %r", fen))
+        fb = fen2[0]
+        fbRanks = fb.split("/")
+        if len(fbRanks)!=8:
+            raise ValueError(form("Bad fen=%r, wrong number of files",
+                fen))
+        for rk in ranks:
+            b.setRank(rk, fbRanks[8-rk])
+            
+        b.mover = "W" if fen2[1]=="w" else "B"
+        b.castleWK = "K" in fen2[2]
+        b.castleWQ = "Q" in fen2[2]
+        b.castleBK = "k" in fen2[2]
+        b.castleBQ = "q" in fen2[2]
+        
+        b.mspmc = int(fen2[4])
+        moveToMake = int(fen2[5])
+        b.ply = (moveToMake-1)*2 + int(b.mover=="B")
+        return b
+    
     def toFen(self) -> str:
         """ output position in FEN notation """
         s = ""
@@ -279,8 +307,8 @@ class Board:
         s = s[:-1] + " " + self.mover.lower()
         s += form(" {} ", self._toFenCastling()) # TODO: castling
         s += "- " # TODO: en passant
-        s += "0 " # TODO: moves since last p move / capture
-        s += form("{}", int(len(self.movesMade)/2)+1)
+        s += form("{} ", self.mspmc)
+        s += form("{}", int(self.ply/2) + 1)
         return s
     
     def _toFenRank(self, rk) -> str:
@@ -318,8 +346,9 @@ class Board:
                
     def setRank(self, r: Rank, pieces: str):
         """ set all the pieces on a rank """
+        pieces2 = expandRank(pieces)
         for f in files:
-            pc = pieces[f-1]
+            pc = pieces2[f-1]
             self.sq[toSqix((f,r))] = pc
             
     def getMirror(self) -> 'Board':
@@ -433,10 +462,20 @@ class Board:
         b2 = self.copy()
         b2.mover = opponent(self.mover)
         b2.movesMade = self.movesMade + [m]
+        b2.ply = self.ply + 1  
+        
+        #>>>>> is it a pawn move or capture?
+        if (self.sq[sqFrom] in pawnSet
+            or self.sq[sqTo] != EMPTY):
+            b2.mspmc = 0
+        else:
+            b2.mspmc = self.mspmc + 1
+            
+        #>>>> do the move 
         sqFrom, sqTo = mv
         b2.sq[sqTo] = b2.sq[sqFrom]
         b2.sq[sqFrom] = EMPTY
-        b2._checkCanCastle()
+        b2._checkCanCastle()   
         
         #>>>>> check for promoting pawns
         _, rankTo = sqixFR(sqTo)
@@ -466,6 +505,21 @@ class Board:
             self.castleBK = False
             self.castleBQ = False
 
+def expandRank(p: str) -> str:
+    """ (p) is a rank in FEN format. Returns the same rank but 
+    with digits expanded to that number of spaces. 
+    """
+    r = ""
+    for ch in p:
+        if ch.isdigit():
+            r += " " * int(ch)
+        else:
+            r += ch
+    #//for ch
+    r += " "*8
+    r = r[:8]
+    return r
+ 
  
 #---------------------------------------------------------------------
 

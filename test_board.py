@@ -1,9 +1,10 @@
 # test_board.py = test <board.py>
 
 from ulib import lintest
+from ulib.butil import pr, prn
 
 import board
-from board import frix, algeSqix, toSqix, movAlmov
+from board import Board, frix, algeSqix, toSqix, movAlmov
 
 #---------------------------------------------------------------------
 
@@ -75,6 +76,28 @@ class T_conversionFunctions(lintest.TestCase):
         ad = "g8"
         r = toAlge(ad)
         self.assertSame(r, "g8", "location g8 == g8 (duh!")
+        
+    def test_expandRank(self): 
+        r = board.expandRank("PPPPPPPP")
+        self.assertSame(r, "PPPPPPPP", "a row of pawns")
+        
+        r = board.expandRank("")
+        self.assertSame(r, "        ", "empty row")
+        
+        r = board.expandRank("8")
+        self.assertSame(r, "        ", "empty row")
+        
+        r = board.expandRank("2p3n1")
+        self.assertSame(r, "  p   n ", "black pawn and knight")
+        
+        r = board.expandRank("2p3n")
+        self.assertSame(r, "  p   n ", "black pawn and knight")
+        
+        r = board.expandRank("2p3n9")
+        self.assertSame(r, "  p   n ", "black pawn and knight")
+        
+        r = board.expandRank("2p3n1KKK")
+        self.assertSame(r, "  p   n ", "black pawn and knight")
  
 #---------------------------------------------------------------------
 
@@ -111,11 +134,19 @@ class T_Board(lintest.TestCase):
         self.assertSame(sv, board.BP, "h7 BP")
         
     def test_fen(self):
-        b = board.Board.startPosition()
+        b = Board.startPosition()
         r = b.toFen()
         self.assertSame(r, 
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
             "FEN for start position")
+        
+        b2 = Board.fromFEN(r)
+        self.assertTrue(isinstance(b2, Board), "b2 is a board")
+        prn("b2:\n{}", b2.termStr())
+        r2 = b2.toFen()
+        self.assertSame(r2, 
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "FEN of (b2)")
         
 
 #---------------------------------------------------------------------
