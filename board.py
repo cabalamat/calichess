@@ -1,4 +1,4 @@
-# board.py = cheaa board
+# board.py = chess board
 
 """
 Codes for a chess board. Allows all the moves from a board position
@@ -26,7 +26,7 @@ from tpcheck import is_type
 class ShouldntGetHere(Exception): pass
 
 #---------------------------------------------------------------------
-# types
+# types and definitions
 
 Rank = int # chess rank 1..8
 File = int # chess file a..h as 1..8
@@ -179,6 +179,26 @@ N_MOV = [-21, -19, -12, -8, 8, 12, 19, 21]
 B_DIR = [-11, -9, 9, 11]
 R_DIR = [-10, -1, 1, 10]
 Q_DIR = B_DIR + R_DIR
+
+PIECE_TO_UNICODE = {
+    " ": " ",
+    "P": "\u2659",
+    "N": "\u2658",
+    "B": "\u2657",
+    "R": "\u2656",
+    "Q": "\u2655",
+    "K": "\u2654",
+    "p": "\u265F",
+    "n": "\u265E",
+    "b": "\u265D",
+    "r": "\u265C",
+    "q": "\u265B",
+    "k": "\u265A"
+}
+
+def toChessUnicode(ch: str) -> str:
+    return ch
+    return PIECE_TO_UNICODE.get(ch, "?")
 
 #---------------------------------------------------------------------
 # players 
@@ -414,6 +434,7 @@ class Board:
         #//for r 
         s += "  +-----------------+\n"
         return s
+
     
     def midTermStr(self) -> str:
         """ middle of board output as xterm string """
@@ -437,7 +458,7 @@ class Board:
                         b = W_BEFORE; a = W_AFTER    
                     elif sv in blackSet:
                         b = B_BEFORE; a = B_AFTER
-                    s += b + sv + a + " "
+                    s += b + toChessUnicode(sv) + a + " "
             #//for f
             s += "\u2551\n"
         #//for r 
@@ -459,6 +480,7 @@ class Board:
 
     def makeMove(self, m: Move) -> 'Board':
         mv = toMov(m)
+        sqFrom, sqTo = mv
         b2 = self.copy()
         b2.mover = opponent(self.mover)
         b2.movesMade = self.movesMade + [m]
@@ -472,7 +494,6 @@ class Board:
             b2.mspmc = self.mspmc + 1
             
         #>>>> do the move 
-        sqFrom, sqTo = mv
         b2.sq[sqTo] = b2.sq[sqFrom]
         b2.sq[sqFrom] = EMPTY
         b2._checkCanCastle()   
